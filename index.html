@@ -1,0 +1,368 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ATLAS</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Rajdhani:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+[hidden]{display:none!important}*{box-sizing:border-box}body{margin:0}
+/* Layout: one-screen console — orb HUD on top, transcript in the middle, command bar pinned at the bottom */
+:root{
+  --bg:#05080d; --panel:#0b1119; --line:#16324a; --ink:#d6ecff; --dim:#6f8ba3;
+  --cyan:#38d6ff; --amber:#ffb547; --red:#ff5d6c;
+  --display:"Orbitron","Rajdhani",system-ui,sans-serif;
+  --body:"Rajdhani","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:radial-gradient(ellipse at 50% 18%,#0c1a28 0%,var(--bg) 60%);color:var(--ink);font-family:var(--body);font-size:17px;}
+.app{height:100%;display:flex;flex-direction:column;max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 0;box-sizing:border-box}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;font-family:var(--mono);font-size:12px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
+header b{font-family:var(--display);color:var(--cyan);letter-spacing:.3em;font-size:15px}
+.hud{position:relative;display:grid;place-items:center;flex:0 0 auto;padding-block:6px}
+canvas#orb{width:min(250px,56vw);height:auto;aspect-ratio:1;max-width:100%}
+#status{font-family:var(--mono);font-size:12px;letter-spacing:.2em;color:var(--cyan);text-transform:uppercase;min-height:16px;text-align:center}
+#log{flex:1 1 auto;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:8px 2px 12px;min-height:0;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.msg{max-width:88%;line-height:1.45;white-space:pre-wrap;word-wrap:break-word;min-width:0}
+.msg.me{align-self:flex-end;background:#0f1c2a;border:1px solid var(--line);padding:8px 12px;border-radius:12px 12px 2px 12px;color:#bfe4ff}
+.msg.ai{align-self:flex-start;border-left:2px solid var(--cyan);padding:2px 0 2px 12px}
+.msg.ai .who{font-family:var(--display);font-size:11px;letter-spacing:.25em;color:var(--cyan);display:block;margin-bottom:2px}
+.msg.err{color:var(--amber);font-family:var(--mono);font-size:13px;align-self:center;text-align:center}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding-bottom:8px}
+.chip{background:transparent;border:1px solid var(--line);color:var(--dim);font-family:var(--body);font-size:14px;padding:5px 11px;border-radius:999px;cursor:pointer}
+.chip:hover,.chip:focus-visible{color:var(--ink);border-color:var(--cyan);outline:none}
+.bar{display:flex;gap:8px;align-items:flex-end;padding-block:10px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+textarea{flex:1;min-width:0;resize:none;background:var(--panel);border:1px solid var(--line);color:var(--ink);font-family:var(--body);font-size:17px;padding:10px 12px;border-radius:10px;height:46px;max-height:140px;box-sizing:border-box}
+textarea:focus{outline:none;border-color:var(--cyan)}
+button.icon{flex:0 0 46px;height:46px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--cyan);cursor:pointer;display:grid;place-items:center}
+button.icon:hover,button.icon:focus-visible{border-color:var(--cyan);outline:none}
+button.icon.live{background:var(--cyan);color:var(--bg)}
+button.icon.stop{color:var(--red)}
+button.icon svg{width:22px;height:22px}
+details{font-family:var(--mono);font-size:12px;color:var(--dim)}
+details summary{cursor:pointer;list-style:none}
+details[open]{position:absolute;right:0;top:0;z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;width:min(300px,86vw)}
+.set{display:grid;gap:10px;margin-top:10px}
+.set label{display:grid;gap:4px;font-size:11px;letter-spacing:.1em}
+.set select,.set input[type=range]{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px;font-family:var(--body);font-size:14px}
+.set .row{display:flex;gap:8px;align-items:center}
+.set button{background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:5px 8px;cursor:pointer;font-family:var(--body)}
+.hint{color:var(--dim);font-size:13px;text-align:center;font-family:var(--mono)}
+kbd{border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--ink)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.key{display:grid;gap:6px}
+.key input{width:100%;box-sizing:border-box;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px;font-family:var(--mono);font-size:12px}
+#setup{position:fixed;inset:0;background:rgba(3,6,10,.92);display:grid;place-items:center;z-index:20;padding:16px}
+#setup .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;max-width:460px;display:grid;gap:12px}
+#setup h2{font-family:var(--display);color:var(--cyan);letter-spacing:.2em;margin:0;font-size:18px}
+#setup p{margin:0;color:var(--dim);line-height:1.4}
+#setup input{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font-family:var(--mono);font-size:13px}
+#setup button{background:var(--cyan);color:var(--bg);border:0;border-radius:8px;padding:10px;font-family:var(--display);letter-spacing:.15em;cursor:pointer}
+.wake{font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:.15em}
+</style></head><body>
+
+<div id="setup" hidden><div class="card">
+  <h2>ATLAS · CONFIGURAÇÃO</h2>
+  <p>O ATLAS pensa com o Google Gemini (plano grátis). Entre em <b>aistudio.google.com</b> → <b>Get API key</b> → <b>Create API key</b>, copie a chave e cole aqui. Ela fica salva só neste computador.</p>
+  <input id="nameSetup" type="text" placeholder="Seu nome" aria-label="Seu nome">
+  <input id="keyIn" type="password" placeholder="AIza..." aria-label="Chave da API do Gemini">
+  <button id="keySave" type="button">LIGAR O ATLAS</button>
+</div></div>
+<div class="app">
+  <header>
+    <b>ATLAS</b>
+    <span id="clock">--:--</span>
+    <div style="position:relative">
+      <details id="settings">
+        <summary>⚙ Ajustes</summary>
+        <div class="set">
+          <label for="voice">VOZ<select id="voice"></select></label>
+          <label for="rate">VELOCIDADE <span id="rateV"></span><input id="rate" type="range" min="0.7" max="1.4" step="0.05" value="1.05"></label>
+          <label for="pitch">TOM (mais grave ←) <span id="pitchV"></span><input id="pitch" type="range" min="0.5" max="1.4" step="0.05" value="0.85"></label>
+          <label for="mode">CÉREBRO<select id="mode"><option value="auto">Automático (Gemini Flash grátis)</option><option value="gemini-2.5-flash">gemini-2.5-flash</option><option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite (mais rápido)</option><option value="gemini-3-flash-preview">gemini-3-flash-preview</option></select></label>
+          <label class="row" for="wakeOn"><input id="wakeOn" type="checkbox"> Modo "ATLAS" (sempre ouvindo a palavra ATLAS)</label>
+          <label class="key" for="nomeIn">SEU NOME<input id="nomeIn" type="text" placeholder="Como o ATLAS te chama"></label>
+          <label class="key" for="sobreIn">SOBRE VOCÊ (memória do ATLAS)<textarea id="sobreIn" rows="4" style="height:auto;font-size:13px" placeholder="Ex: tenho um canal de história no YouTube, estudo à tarde, trabalho com sites..."></textarea></label>
+          <label class="key" for="keyEdit">CHAVE DO GEMINI<input id="keyEdit" type="password" placeholder="AIza..."></label>
+          <label class="row" for="mute"><input id="mute" type="checkbox"> Responder só em texto</label>
+          <a href="https://claude.ai/artifact/9GThGCQDoWF78t9FS8xGNt" target="_blank" rel="noopener" style="color:var(--cyan)">Abrir ATLAS Central (no Claude) ↗</a>
+          <div class="row"><button id="test" type="button">Testar voz</button><button id="clear" type="button">Limpar conversa</button></div>
+        </div>
+      </details>
+    </div>
+  </header>
+
+  <div class="hud"><canvas id="orb" width="500" height="500" aria-hidden="true"></canvas><div id="status">online</div><div class="wake" id="wakeTag" hidden>DIGA "ATLAS…" PARA FALAR</div></div>
+
+  <div id="log" aria-live="polite"></div>
+
+  <div class="chips" id="chips">
+    <button class="chip" type="button">3 ideias de Shorts de APUSH</button>
+    <button class="chip" type="button">Título chamativo pro próximo vídeo</button>
+    <button class="chip" type="button">Monta meu plano de hoje</button>
+    <button class="chip" type="button">Me explica o Trent Affair em 30 segundos</button>
+  </div>
+
+  <form class="bar" id="form">
+    <button class="icon" id="mic" type="button" title="Falar" aria-label="Falar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+    </button>
+    <textarea id="q" placeholder="Digite, ou segure ESPAÇO / clique no microfone para falar…" rows="1" aria-label="Mensagem"></textarea>
+    <button class="icon" id="send" type="submit" title="Enviar" aria-label="Enviar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+    </button>
+  </form>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const log = $('#log'), q = $('#q'), statusEl = $('#status');
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem('atlas.'+k); return v==null?d:JSON.parse(v);}catch(e){return d;} },
+  set(k, v){ try{ localStorage.setItem('atlas.'+k, JSON.stringify(v)); }catch(e){} }
+};
+
+/* ---------- persona ---------- */
+const RULES_FN = () => {
+  const nome = store.get('nome','') || 'o usuário';
+  const sobre = store.get('sobre','');
+  return `Você é ATLAS, um assistente pessoal de voz no estilo de um mordomo de IA de filme: confiante, leal, um pouco espirituoso, sempre útil. Chame o usuário de "chefe" de vez em quando, sem exagerar. O nome dele é ${nome}.
+${sobre ? 'O que ele te contou sobre si mesmo (use só quando ajudar):\n' + sobre + '\n' : ''}Regras de resposta: fale em português do Brasil, natural, como se estivesse FALANDO em voz alta. Respostas curtas (2 a 5 frases) a não ser que ele peça mais. Nada de markdown, listas com símbolos, emojis ou links — vai ser lido em voz alta. Se precisar listar, diga "primeiro", "segundo"...
+Você não tem acesso a arquivos nem à internet; se ele pedir algo assim, diga com honestidade e ajude a preparar o que ele precisa.
+Agora é ${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}, ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}.`;
+};
+
+let turns = store.get('turns', []);
+let ctl = null, busy = false;
+let apiKey = store.get('gkey','');
+
+/* ---------- clock ---------- */
+function tick(){ $('#clock').textContent = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) + ' · ' + new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}); }
+tick(); setInterval(tick, 15000);
+
+/* ---------- orb ---------- */
+const cv = $('#orb'), cx = cv.getContext('2d');
+let mode = 'idle', level = 0, target = 0;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function draw(t){
+  const W = cv.width, C = W/2; cx.clearRect(0,0,W,W);
+  level += (target - level) * 0.18; if (mode==='speak') target = Math.max(0, target*0.93);
+  const col = mode==='listen' ? '255,181,71' : '56,214,255';
+  const spin = t/1000 * (mode==='think' ? 2.4 : 0.35);
+  const breathe = reduce ? 0 : Math.sin(t/900)*4;
+  // outer ticks
+  cx.save(); cx.translate(C,C); cx.rotate(spin);
+  for (let i=0;i<72;i++){ const a=i/72*Math.PI*2, r1=C-18, r2=C-(i%6?26:38);
+    cx.strokeStyle=`rgba(${col},${i%6?0.25:0.6})`; cx.lineWidth=i%6?2:3;
+    cx.beginPath(); cx.moveTo(Math.cos(a)*r1,Math.sin(a)*r1); cx.lineTo(Math.cos(a)*r2,Math.sin(a)*r2); cx.stroke(); }
+  cx.restore();
+  // arcs
+  cx.save(); cx.translate(C,C); cx.rotate(-spin*1.6);
+  cx.strokeStyle=`rgba(${col},0.75)`; cx.lineWidth=5;
+  for (let k=0;k<3;k++){ cx.beginPath(); cx.arc(0,0,C-62,k*2.09,k*2.09+1.2); cx.stroke(); }
+  cx.restore();
+  // core
+  const R = 70 + breathe + level*55;
+  const g = cx.createRadialGradient(C,C,4,C,C,R*1.8);
+  g.addColorStop(0,`rgba(${col},0.95)`); g.addColorStop(0.35,`rgba(${col},0.35)`); g.addColorStop(1,`rgba(${col},0)`);
+  cx.fillStyle=g; cx.beginPath(); cx.arc(C,C,R*1.8,0,Math.PI*2); cx.fill();
+  cx.strokeStyle=`rgba(${col},0.9)`; cx.lineWidth=3; cx.beginPath(); cx.arc(C,C,R,0,Math.PI*2); cx.stroke();
+  // voice wave ring
+  if (mode==='speak' || mode==='listen'){
+    cx.beginPath();
+    for (let i=0;i<=120;i++){ const a=i/120*Math.PI*2; const w = Math.sin(a*8 + t/120)*(6+level*26) + Math.sin(a*13 - t/90)*(3+level*12);
+      const r = R+22+w; const x=C+Math.cos(a)*r, y=C+Math.sin(a)*r; i?cx.lineTo(x,y):cx.moveTo(x,y); }
+    cx.strokeStyle=`rgba(${col},0.55)`; cx.lineWidth=2; cx.stroke();
+  }
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+function setMode(m, label){ mode = m; statusEl.textContent = label; if (m!=='speak') target = m==='think'?0.15:0; }
+
+/* ---------- voice out ---------- */
+const synth = window.speechSynthesis;
+let voices = [];
+function loadVoices(){
+  if (!synth) return; voices = synth.getVoices();
+  const sel = $('#voice'); const saved = store.get('voice', '');
+  const sorted = [...voices].sort((a,b)=> (b.lang.startsWith('pt')-a.lang.startsWith('pt')));
+  sel.innerHTML = '';
+  for (const v of sorted){ const o=document.createElement('option'); o.value=v.name; o.textContent=`${v.name} (${v.lang})`; sel.append(o); }
+  const pick = sorted.find(v=>v.name===saved) || sorted.find(v=>/pt-BR/i.test(v.lang) && /Daniel|Antonio|Male|Masculin|Google/i.test(v.name)) || sorted.find(v=>/pt/i.test(v.lang)) || sorted[0];
+  if (pick) sel.value = pick.name;
+}
+if (synth){ loadVoices(); synth.onvoiceschanged = loadVoices; }
+const rate = $('#rate'), pitch = $('#pitch'), mute = $('#mute'), modeSel = $('#mode');
+rate.value = store.get('rate', 1.05); pitch.value = store.get('pitch', 0.9); mute.checked = store.get('mute', false); modeSel.value = store.get('model','auto'); if (!modeSel.value) modeSel.value='auto';
+const showVals = () => { $('#rateV').textContent = (+rate.value).toFixed(2); $('#pitchV').textContent = (+pitch.value).toFixed(2); };
+showVals();
+for (const [el,k] of [[rate,'rate'],[pitch,'pitch']]) el.oninput = () => { store.set(k, +el.value); showVals(); };
+mute.onchange = () => store.set('mute', mute.checked);
+modeSel.onchange = () => store.set('model', modeSel.value);
+$('#voice').onchange = e => store.set('voice', e.target.value);
+
+let speakQueue = 0;
+function speak(text){
+  if (!synth || mute.checked) return;
+  const clean = text.replace(/[*_#`>\[\]]/g,'').trim(); if (!clean) return;
+  const u = new SpeechSynthesisUtterance(clean);
+  const v = voices.find(v=>v.name===$('#voice').value); if (v){ u.voice=v; u.lang=v.lang; } else u.lang='pt-BR';
+  u.rate = +rate.value; u.pitch = +pitch.value;
+  u.onstart = () => setMode('speak','falando');
+  u.onboundary = () => { target = 0.6 + Math.random()*0.4; };
+  u.onend = u.onerror = () => { speakQueue--; if (speakQueue<=0 && !busy) setMode('idle','online'); };
+  speakQueue++; synth.speak(u);
+}
+// keep speaking animated even when boundary events are missing
+setInterval(()=>{ if (mode==='speak' && synth && synth.speaking) target = Math.max(target, 0.35+Math.random()*0.5); }, 140);
+
+$('#test').onclick = () => speak('Sistemas online. Pronto para trabalhar, chefe.');
+$('#clear').onclick = () => { turns=[]; store.set('turns',[]); log.innerHTML=''; greet(); };
+
+/* ---------- transcript ---------- */
+function bubble(cls, text){
+  const d = document.createElement('div'); d.className = 'msg ' + cls;
+  if (cls==='ai'){ const w=document.createElement('span'); w.className='who'; w.textContent='ATLAS'; const b=document.createElement('span'); b.textContent=text; d.append(w,b); d.body=b; }
+  else d.textContent = text;
+  log.append(d); log.scrollTop = log.scrollHeight; return d;
+}
+function greet(){
+  const h = new Date().getHours();
+  const hi = h<12 ? 'Bom dia' : h<18 ? 'Boa tarde' : 'Boa noite';
+  bubble('ai', `${hi}${store.get('nome','') ? ', ' + store.get('nome','') : ''}. ATLAS online. Segure ESPAÇO ou clique no microfone para falar — o que vamos fazer hoje?`);
+}
+for (const t of turns.slice(-12)) bubble(t.role==='user'?'me':'ai', t.content);
+if (!turns.length) greet();
+
+/* ---------- ask ---------- */
+function trimTurns(){ let t = turns.slice(-16); while (t.length && t[0].role!=='user') t = t.slice(1); return t; }
+const MODELS = ['gemini-2.5-flash','gemini-flash-latest','gemini-2.5-flash-lite','gemini-3-flash-preview'];
+async function callOnce(model, messages, onText, signal){
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':streamGenerateContent?alt=sse';
+  const r = await fetch(url, {
+    method:'POST', signal,
+    headers:{'content-type':'application/json','x-goog-api-key':apiKey},
+    body: JSON.stringify({
+      systemInstruction:{parts:[{text:RULES_FN()}]},
+      contents: messages.map(m => ({role: m.role==='assistant' ? 'model' : 'user', parts:[{text:m.content}]})),
+      generationConfig:{maxOutputTokens:1024, temperature:0.8}
+    })
+  });
+  if (!r.ok){ let m=''; try{ m=(await r.json()).error?.message||''; }catch(e){} const err=new Error(m||('HTTP '+r.status)); err.status=r.status; throw err; }
+  const rd = r.body.getReader(), dec = new TextDecoder(); let buf='', text='';
+  for(;;){ const {value, done} = await rd.read(); if (done) break; buf += dec.decode(value,{stream:true});
+    let i; while ((i = buf.indexOf('\n')) >= 0){ const line = buf.slice(0,i).trim(); buf = buf.slice(i+1);
+      if (!line.startsWith('data:')) continue; const d = line.slice(5).trim(); if (!d) continue;
+      let ev; try{ ev = JSON.parse(d); }catch(e){ continue; }
+      if (ev.error) throw Object.assign(new Error(ev.error.message||'erro'), {status: ev.error.code});
+      const parts = ev.candidates?.[0]?.content?.parts || [];
+      const add = parts.filter(x => x.text && !x.thought).map(x => x.text).join('');
+      if (add){ text += add; onText(text); } } }
+  if (!text.trim()) throw Object.assign(new Error('Resposta vazia'), {status: 0});
+  return text;
+}
+async function callClaude(messages, onText, signal){
+  const chosen = modeSel.value;
+  const list = chosen === 'auto' ? [store.get('okModel', MODELS[0]), ...MODELS] : [chosen];
+  let last;
+  for (const m of [...new Set(list)]){
+    try{ const t = await callOnce(m, messages, onText, signal); store.set('okModel', m); return t; }
+    catch(e){ last = e; if (e.name==='AbortError') throw e; if (!(e.status===404 || e.status===400 && /model/i.test(e.message))) throw e; }
+  }
+  throw last;
+}
+function errText(e){
+  if (e.status===400 && /API key/i.test(e.message) || e.status===401 || e.status===403) return 'Chave do Gemini inválida. Confira em Ajustes (crie em aistudio.google.com).';
+  if (e.status===429) return 'Limite grátis do Gemini atingido por agora. Espere um pouco (ou até amanhã) e tente de novo.';
+  if (e.status===404) return 'Modelo não encontrado. Em Ajustes, deixe o Cérebro em "Automático".';
+  if (e.status===503 || e.status===500) return 'Servidores do Google ocupados. Tente de novo.';
+  return 'Falhou a conexão: ' + (e.message||'sem internet?');
+}
+async function ask(text){
+  text = text.trim(); if (!text || busy) return;
+  if (!apiKey){ $('#setup').hidden = false; return; }
+  if (synth) synth.cancel(); speakQueue = 0;
+  bubble('me', text); q.value=''; autosize();
+  turns.push({role:'user', content:text});
+  const out = bubble('ai', '…'); busy = true; setBusyUI(true); setMode('think','pensando');
+  ctl = new AbortController(); let spoken = 0;
+  const flush = (full, final) => {
+    const rest = full.slice(spoken);
+    const m = final ? rest : (rest.match(/^[\s\S]*?[.!?…](\s|$)/)?.[0] || '');
+    if (m.trim()){ speak(m); spoken += m.length; if (!final) flush(full, false); }
+  };
+  try{
+    const ans = await callClaude(trimTurns(), t => { out.body.textContent = t; log.scrollTop = log.scrollHeight; flush(t,false); }, ctl.signal);
+    flush(ans, true);
+    turns.push({role:'assistant', content:ans}); store.set('turns', turns.slice(-30));
+  }catch(e){
+    if (e.name==='AbortError'){ turns.pop(); }
+    else { if (out.body.textContent==='…') out.remove(); bubble('err', errText(e)); turns.pop(); }
+  }finally{
+    busy = false; setBusyUI(false);
+    if (!(synth && synth.speaking) || mute.checked) setMode('idle','online');
+    if (wakeOn.checked) startWake();
+  }
+}
+function setBusyUI(on){
+  const b = $('#send'); b.classList.toggle('stop', on); b.title = on ? 'Parar' : 'Enviar'; b.setAttribute('aria-label', b.title);
+  b.innerHTML = on ? '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>'
+                   : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h15M13 6l6 6-6 6"/></svg>';
+}
+$('#form').addEventListener('submit', e => { e.preventDefault(); if (busy){ ctl?.abort(); synth?.cancel(); return; } if (synth && synth.speaking){ synth.cancel(); } ask(q.value); });
+q.addEventListener('keydown', e => { if (e.key==='Enter' && !e.shiftKey){ e.preventDefault(); $('#form').requestSubmit(); } });
+function autosize(){ q.style.height='46px'; q.style.height=Math.min(140,q.scrollHeight)+'px'; }
+q.addEventListener('input', autosize);
+for (const c of document.querySelectorAll('.chip')) c.onclick = () => ask(c.textContent);
+
+/* ---------- voice in ---------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const wakeOn = $('#wakeOn'); wakeOn.checked = store.get('wake', false);
+let rec = null, listening = false, wakeRec = null;
+function micHint(msg){ bubble('err', msg || 'Não consegui usar o microfone. Abra o ATLAS pelo atalho "Abrir ATLAS" (Edge ou Chrome) e permita o microfone quando ele pedir.'); }
+function listen(){
+  if (!SR){ micHint('Este navegador não tem reconhecimento de voz. Use o Microsoft Edge ou o Google Chrome.'); return; }
+  if (listening){ rec?.stop(); return; }
+  stopWake();
+  rec = new SR(); rec.lang='pt-BR'; rec.interimResults=true; rec.continuous=false;
+  let finalText='';
+  rec.onstart = () => { listening=true; $('#mic').classList.add('live'); setMode('listen','ouvindo'); synth?.cancel(); };
+  rec.onresult = e => { let s=''; for (const r of e.results){ s += r[0].transcript; if (r.isFinal) finalText = s; } q.value = s; autosize(); target = 0.6; };
+  rec.onerror = ev => { if (ev.error==='not-allowed' || ev.error==='service-not-allowed') micHint('O microfone foi bloqueado. Clique no cadeado ao lado do endereço e permita o microfone.'); };
+  rec.onend = () => { listening=false; $('#mic').classList.remove('live'); if (mode==='listen') setMode('idle','online'); if (finalText.trim()) ask(finalText); else if (wakeOn.checked) startWake(); };
+  try{ rec.start(); }catch(e){ micHint(); }
+}
+$('#mic').onclick = listen;
+// push-to-talk: hold space when not typing
+document.addEventListener('keydown', e => { if (e.code==='Space' && document.activeElement!==q && !e.repeat && !listening){ e.preventDefault(); listen(); } });
+document.addEventListener('keyup', e => { if (e.code==='Space' && document.activeElement!==q && listening){ e.preventDefault(); rec?.stop(); } });
+
+// wake word "ATLAS"
+function startWake(){
+  if (!SR || !wakeOn.checked || listening || busy || wakeRec) return;
+  $('#wakeTag').hidden = false;
+  wakeRec = new SR(); wakeRec.lang='pt-BR'; wakeRec.continuous=true; wakeRec.interimResults=false;
+  wakeRec.onresult = e => {
+    const r = e.results[e.results.length-1]; const t = r[0].transcript.trim();
+    const m = t.match(/\b(atlas|átlas|atlas,)\b[\s,]*(.*)/i);
+    if (m){ stopWake(); if (m[2] && m[2].length > 3) ask(m[2]); else { speak('Sim, chefe?'); setTimeout(listen, 900); } }
+  };
+  wakeRec.onend = () => { wakeRec = null; if (wakeOn.checked && !listening && !busy) setTimeout(startWake, 400); };
+  wakeRec.onerror = ev => { if (ev.error==='not-allowed'){ wakeOn.checked=false; store.set('wake',false); micHint(); } };
+  try{ wakeRec.start(); }catch(e){ wakeRec = null; }
+}
+function stopWake(){ $('#wakeTag').hidden = true; if (wakeRec){ const w = wakeRec; wakeRec = null; w.onend = null; try{ w.stop(); }catch(e){} } }
+wakeOn.onchange = () => { store.set('wake', wakeOn.checked); wakeOn.checked ? startWake() : stopWake(); };
+
+/* ---------- profile ---------- */
+const nomeIn = $('#nomeIn'), sobreIn = $('#sobreIn');
+nomeIn.value = store.get('nome',''); sobreIn.value = store.get('sobre','');
+nomeIn.onchange = () => store.set('nome', nomeIn.value.trim());
+sobreIn.onchange = () => store.set('sobre', sobreIn.value.trim().slice(0,3000));
+/* ---------- key ---------- */
+const keyEdit = $('#keyEdit'); keyEdit.value = apiKey;
+keyEdit.onchange = () => { apiKey = keyEdit.value.trim(); store.set('gkey', apiKey); };
+$('#keySave').onclick = () => { const nm = $('#nameSetup').value.trim(); if (nm){ store.set('nome', nm); nomeIn.value = nm; } const k = $('#keyIn').value.trim(); if (k.length < 20){ $('#keyIn').focus(); return; } apiKey = k; store.set('gkey', k); keyEdit.value = k; $('#setup').hidden = true; speak('Sistemas online. Pronto para trabalhar, chefe.'); if (wakeOn.checked) startWake(); };
+if (!apiKey) $('#setup').hidden = false; else if (wakeOn.checked) setTimeout(startWake, 800);
+</script>
+</body></html>
