@@ -15,7 +15,43 @@
 }
 html,body{height:100%}
 body{background:radial-gradient(ellipse at 50% 18%,#0c1a28 0%,var(--bg) 60%);color:var(--ink);font-family:var(--body);font-size:17px;}
-.app{height:100%;display:flex;flex-direction:column;max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 0;box-sizing:border-box}
+.shell{height:100%;display:grid;grid-template-columns:minmax(220px,280px) minmax(0,1fr) minmax(240px,300px);gap:18px;max-width:1500px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.side{display:flex;flex-direction:column;gap:14px;padding-block:14px;overflow-y:auto;min-width:0;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+.card{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,rgba(56,214,255,.05),rgba(56,214,255,0));padding:12px 14px;display:grid;gap:8px;position:relative}
+.card::before{content:'';position:absolute;left:-1px;top:12px;width:3px;height:22px;background:var(--cyan);border-radius:2px}
+.card h3{margin:0;font-family:var(--display);font-size:11px;letter-spacing:.25em;color:var(--cyan);font-weight:500;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card h3 button{background:none;border:0;color:var(--dim);cursor:pointer;font-family:var(--mono);font-size:11px;letter-spacing:.05em;padding:0}
+.card h3 button:hover{color:var(--cyan)}
+.bigclock{font-family:var(--display);font-size:46px;line-height:1;color:var(--ink);letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.bigclock small{font-size:18px;color:var(--dim)}
+.date{font-family:var(--mono);font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.12em}
+.wx{display:flex;align-items:baseline;gap:10px}.wx b{font-family:var(--display);font-size:30px;font-weight:500}.wx span{color:var(--dim);font-size:14px}
+.muted{color:var(--dim);font-size:13px;font-family:var(--mono);line-height:1.4}
+.list{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.list li{display:flex;gap:8px;align-items:flex-start;font-size:15px;line-height:1.3;min-width:0}
+.list li span{flex:1;min-width:0;overflow-wrap:anywhere}
+.list li.done span{text-decoration:line-through;color:var(--dim)}
+.list li time{font-family:var(--mono);font-size:12px;color:var(--amber);flex:0 0 auto;padding-top:2px}
+.list li button{background:none;border:0;color:var(--dim);cursor:pointer;font-size:14px;padding:0 2px;line-height:1}
+.list li button:hover{color:var(--red)}
+.list input[type=checkbox]{accent-color:var(--cyan);margin-top:3px}
+.add{display:flex;gap:6px}.add input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--ink);padding:6px 8px;font-family:var(--body);font-size:14px}
+.add input:focus{outline:none;border-color:var(--cyan)}
+.add button{background:transparent;border:1px solid var(--line);color:var(--cyan);border-radius:8px;padding:0 10px;cursor:pointer}
+.links{display:flex;flex-wrap:wrap;gap:6px}
+.links a{border:1px solid var(--line);color:var(--ink);text-decoration:none;font-size:13px;padding:4px 9px;border-radius:999px}
+.links a:hover,.links a:focus-visible{border-color:var(--cyan);color:var(--cyan);outline:none}
+.openbtn{align-self:flex-start;border:1px solid var(--cyan);color:var(--cyan);text-decoration:none;border-radius:8px;padding:6px 12px;font-size:15px}
+#boot{position:fixed;inset:0;z-index:30;background:var(--bg);display:grid;place-items:center;cursor:pointer;transition:opacity .6s}
+#boot .inner{display:grid;gap:10px;justify-items:center;text-align:center;padding:16px}
+#boot h1{font-family:var(--display);color:var(--cyan);letter-spacing:.5em;margin:0;font-size:clamp(28px,6vw,54px);font-weight:500;padding-left:.5em}
+#boot pre{font-family:var(--mono);color:var(--dim);font-size:13px;margin:0;min-height:7em;text-align:left;white-space:pre-wrap}
+#boot p{font-family:var(--mono);color:var(--amber);letter-spacing:.2em;font-size:12px;margin:0;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.35}}
+@media (max-width:1100px){.shell{grid-template-columns:minmax(0,1fr) minmax(230px,280px)}.side.left{display:none}}
+@media (max-width:760px){.shell{grid-template-columns:minmax(0,1fr)}.side.right{display:none}body.panels .side.right{display:flex;position:fixed;inset:0;z-index:15;background:var(--bg);padding-inline:16px}}
+#panelBtn{display:none}@media (max-width:760px){#panelBtn{display:inline}}
+.app{height:100%;display:flex;flex-direction:column;min-width:0;margin:0 auto;width:100%;padding-block:12px 0;box-sizing:border-box}
 header{display:flex;justify-content:space-between;align-items:center;gap:12px;font-family:var(--mono);font-size:12px;color:var(--dim);letter-spacing:.08em;text-transform:uppercase}
 header b{font-family:var(--display);color:var(--cyan);letter-spacing:.3em;font-size:15px}
 .hud{position:relative;display:grid;place-items:center;flex:0 0 auto;padding-block:6px}
@@ -43,6 +79,8 @@ details summary{cursor:pointer;list-style:none}
 details[open]{position:absolute;right:0;top:0;z-index:5;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;width:min(300px,86vw)}
 .set{display:grid;gap:10px;margin-top:10px}
 .set label{display:grid;gap:4px;font-size:11px;letter-spacing:.1em}
+.set textarea,.set input[type=text]{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px;font-family:var(--mono);font-size:12px;height:auto}
+details[open]{max-height:80vh;overflow-y:auto}
 .set select,.set input[type=range]{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:4px;font-family:var(--body);font-size:14px}
 .set .row{display:flex;gap:8px;align-items:center}
 .set button{background:transparent;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:5px 8px;cursor:pointer;font-family:var(--body)}
@@ -68,10 +106,18 @@ kbd{border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--ink
   <input id="keyIn" type="password" placeholder="AIza..." aria-label="Chave da API do Gemini">
   <button id="keySave" type="button">LIGAR O ATLAS</button>
 </div></div>
+<div id="boot"><div class="inner"><h1>ATLAS</h1><pre id="bootlog"></pre><p id="bootTap">CLIQUE PARA INICIAR OS SISTEMAS</p></div></div>
+<div class="shell">
+<aside class="side left" aria-label="Painel de status">
+  <div class="card"><div class="bigclock" id="bigclock">--:--</div><div class="date" id="bigdate"></div></div>
+  <div class="card"><h3>CLIMA <button type="button" id="wxRefresh">atualizar</button></h3><div id="wx" class="muted">Defina sua cidade em ⚙ Ajustes.</div></div>
+  <div class="card"><h3>PAUTA DO DIA <button type="button" id="pautaBtn">carregar</button></h3><div id="pautaInfo" class="muted">Carregue o arquivo .txt da pauta (ou arraste para a tela) e pergunte "quais os temas de hoje?".</div><input id="pautaFile" type="file" accept=".txt,.md,text/plain" hidden></div>
+  <div class="card"><h3>SISTEMA</h3><div class="muted" id="sys">Cérebro: Gemini · Voz: pt-BR</div></div>
+</aside>
 <div class="app">
   <header>
     <b>ATLAS</b>
-    <span id="clock">--:--</span>
+    <span><span id="clock">--:--</span> <button type="button" id="panelBtn" style="background:none;border:1px solid var(--line);color:var(--cyan);border-radius:6px;font-family:var(--mono);font-size:11px;padding:3px 8px;cursor:pointer">PAINEL</button></span>
     <div style="position:relative">
       <details id="settings">
         <summary>⚙ Ajustes</summary>
@@ -83,6 +129,8 @@ kbd{border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--ink
           <label class="row" for="wakeOn"><input id="wakeOn" type="checkbox"> Modo "ATLAS" (sempre ouvindo a palavra ATLAS)</label>
           <label class="key" for="nomeIn">SEU NOME<input id="nomeIn" type="text" placeholder="Como o ATLAS te chama"></label>
           <label class="key" for="sobreIn">SOBRE VOCÊ (memória do ATLAS)<textarea id="sobreIn" rows="4" style="height:auto;font-size:13px" placeholder="Ex: tenho um canal de história no YouTube, estudo à tarde, trabalho com sites..."></textarea></label>
+          <label class="key" for="cityIn">SUA CIDADE (clima)<input id="cityIn" type="text" placeholder="Ex: Serra, Vitória"></label>
+          <label class="key" for="linksIn">ATALHOS (nome = link, um por linha)<textarea id="linksIn" rows="6"></textarea></label>
           <label class="key" for="keyEdit">CHAVE DO GEMINI<input id="keyEdit" type="password" placeholder="AIza..."></label>
           <label class="row" for="mute"><input id="mute" type="checkbox"> Responder só em texto</label>
           <a href="https://claude.ai/artifact/9GThGCQDoWF78t9FS8xGNt" target="_blank" rel="noopener" style="color:var(--cyan)">Abrir ATLAS Central (no Claude) ↗</a>
@@ -100,7 +148,8 @@ kbd{border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--ink
     <button class="chip" type="button">3 ideias de Shorts de APUSH</button>
     <button class="chip" type="button">Título chamativo pro próximo vídeo</button>
     <button class="chip" type="button">Monta meu plano de hoje</button>
-    <button class="chip" type="button">Me explica o Trent Affair em 30 segundos</button>
+    <button class="chip" type="button">Quais os temas da pauta de hoje?</button>
+    <button class="chip" type="button">Me lembra de gravar daqui a 1 hora</button>
   </div>
 
   <form class="bar" id="form">
@@ -112,6 +161,16 @@ kbd{border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--ink
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
     </button>
   </form>
+</div>
+<aside class="side right" aria-label="Tarefas e lembretes">
+  <div class="card"><h3>TAREFAS DE HOJE <button type="button" id="tasksClear">limpar feitas</button></h3>
+    <ul class="list" id="tasks"></ul>
+    <form class="add" id="taskForm"><input id="taskIn" type="text" placeholder="Nova tarefa…" aria-label="Nova tarefa"><button type="submit" aria-label="Adicionar">+</button></form>
+  </div>
+  <div class="card"><h3>LEMBRETES</h3><ul class="list" id="rems"></ul><div class="muted" id="remsEmpty">Diga: "Atlas, me lembra de gravar às 15h".</div></div>
+  <div class="card"><h3>ATALHOS</h3><div class="links" id="links"></div><div class="muted">Diga: "Atlas, abre o Metricool".</div></div>
+  <button type="button" id="panelClose" style="display:none" class="chip">Fechar painel</button>
+</aside>
 </div>
 
 <script>
@@ -126,10 +185,32 @@ const store = {
 const RULES_FN = () => {
   const nome = store.get('nome','') || 'o usuário';
   const sobre = store.get('sobre','');
+  const now = new Date();
+  const tasks = store.get('tasks', []).map(t => (t.done ? '[feita] ' : '[pendente] ') + t.text).join('\n') || '(nenhuma)';
+  const rems = store.get('rems', []).filter(r => !r.fired).map(r => new Date(r.at).toLocaleString('pt-BR',{weekday:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'}) + ' — ' + r.text).join('\n') || '(nenhum)';
+  const links = parseLinks().map(l => l.name).join(', ');
+  const pauta = store.get('pauta', null);
+  const wx = store.get('wxText', '');
   return `Você é ATLAS, um assistente pessoal de voz no estilo de um mordomo de IA de filme: confiante, leal, um pouco espirituoso, sempre útil. Chame o usuário de "chefe" de vez em quando, sem exagerar. O nome dele é ${nome}.
-${sobre ? 'O que ele te contou sobre si mesmo (use só quando ajudar):\n' + sobre + '\n' : ''}Regras de resposta: fale em português do Brasil, natural, como se estivesse FALANDO em voz alta. Respostas curtas (2 a 5 frases) a não ser que ele peça mais. Nada de markdown, listas com símbolos, emojis ou links — vai ser lido em voz alta. Se precisar listar, diga "primeiro", "segundo"...
-Você não tem acesso a arquivos nem à internet; se ele pedir algo assim, diga com honestidade e ajude a preparar o que ele precisa.
-Agora é ${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}, ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}.`;
+${sobre ? 'O que ele te contou sobre si mesmo (use só quando ajudar):\n' + sobre + '\n' : ''}
+Regras de resposta: fale em português do Brasil, natural, como se estivesse FALANDO em voz alta. Respostas curtas (2 a 5 frases) a não ser que ele peça mais. Nada de markdown, listas com símbolos, emojis ou links — vai ser lido em voz alta. Se precisar listar, diga "primeiro", "segundo"...
+Você não tem acesso à internet nem a arquivos além dos dados abaixo; se ele pedir algo fora disso, diga com honestidade.
+
+AGORA: ${now.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}, ${now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}. Data/hora local ISO: ${localISO(now)}.
+${wx ? 'CLIMA: ' + wx + '\n' : ''}TAREFAS DE HOJE:
+${tasks}
+LEMBRETES MARCADOS:
+${rems}
+ATALHOS DE SITES DISPONÍVEIS: ${links || '(nenhum)'}
+${pauta ? 'PAUTA DO DIA (arquivo "' + pauta.name + '"):\n' + pauta.text.slice(0, 14000) + '\n' : 'PAUTA: nenhuma carregada (se ele perguntar, diga para clicar em "carregar" no painel PAUTA DO DIA).\n'}
+COMANDOS: você controla o painel escrevendo comandos no FINAL da resposta, cada um sozinho numa linha, exatamente neste formato (eles não são lidos em voz alta):
+[[LEMBRETE|AAAA-MM-DDTHH:MM|texto curto]]  → marca um lembrete (calcule a data/hora a partir de AGORA; "daqui a 1 hora" = agora + 60 min)
+[[TAREFA|texto]]  → adiciona tarefa
+[[FEITO|texto da tarefa]]  → marca tarefa como feita
+[[REMOVER_TAREFA|texto da tarefa]]
+[[CANCELAR_LEMBRETE|texto do lembrete]]
+[[ABRIR|nome do atalho]]  → abre um site da lista de atalhos (use o nome exato)
+Use comandos só quando ele pedir a ação. Na parte falada, confirme em uma frase o que fez (ex: "Feito, chefe, te lembro às 15h.").`;
 };
 
 let turns = store.get('turns', []);
@@ -137,8 +218,15 @@ let ctl = null, busy = false;
 let apiKey = store.get('gkey','');
 
 /* ---------- clock ---------- */
-function tick(){ $('#clock').textContent = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) + ' · ' + new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}); }
-tick(); setInterval(tick, 15000);
+const pad = n => String(n).padStart(2,'0');
+function localISO(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function tick(){
+  const d = new Date();
+  $('#clock').textContent = d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) + ' · ' + d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+  $('#bigclock').innerHTML = `${pad(d.getHours())}:${pad(d.getMinutes())}<small>:${pad(d.getSeconds())}</small>`;
+  $('#bigdate').textContent = d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});
+}
+tick(); setInterval(tick, 1000);
 
 /* ---------- orb ---------- */
 const cv = $('#orb'), cx = cv.getContext('2d');
@@ -284,6 +372,7 @@ async function ask(text){
   if (synth) synth.cancel(); speakQueue = 0;
   bubble('me', text); q.value=''; autosize();
   turns.push({role:'user', content:text});
+  if (tryLocalOpen(text)) return;
   const out = bubble('ai', '…'); busy = true; setBusyUI(true); setMode('think','pensando');
   ctl = new AbortController(); let spoken = 0;
   const flush = (full, final) => {
@@ -292,9 +381,12 @@ async function ask(text){
     if (m.trim()){ speak(m); spoken += m.length; if (!final) flush(full, false); }
   };
   try{
-    const ans = await callClaude(trimTurns(), t => { out.body.textContent = t; log.scrollTop = log.scrollHeight; flush(t,false); }, ctl.signal);
-    flush(ans, true);
-    turns.push({role:'assistant', content:ans}); store.set('turns', turns.slice(-30));
+    const ans = await callClaude(trimTurns(), t => { const c = stripCmds(t); out.body.textContent = c || '…'; log.scrollTop = log.scrollHeight; flush(c,false); }, ctl.signal);
+    const clean = stripCmds(ans);
+    out.body.textContent = clean;
+    flush(clean, true);
+    runCmds(ans, out);
+    turns.push({role:'assistant', content:clean}); store.set('turns', turns.slice(-30));
   }catch(e){
     if (e.name==='AbortError'){ turns.pop(); }
     else { if (out.body.textContent==='…') out.remove(); bubble('err', errText(e)); turns.pop(); }
@@ -315,6 +407,200 @@ function autosize(){ q.style.height='46px'; q.style.height=Math.min(140,q.scroll
 q.addEventListener('input', autosize);
 for (const c of document.querySelectorAll('.chip')) c.onclick = () => ask(c.textContent);
 
+
+/* ---------- commands ---------- */
+function stripCmds(t){ return t.replace(/\[\[[^\]]*\]\]/g,'').replace(/\[\[[^\]]*$/,'').replace(/\n{3,}/g,'\n\n').trim(); }
+function norm(x){ return String(x||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim(); }
+function findBy(list, text){ const n = norm(text); return list.find(t => norm(t.text)===n) || list.find(t => norm(t.text).includes(n) || n.includes(norm(t.text))); }
+function runCmds(ans, out){
+  const re = /\[\[([A-Z_]+)\|([^\]]*)\]\]/g; let m;
+  while ((m = re.exec(ans))){
+    const kind = m[1], parts = m[2].split('|').map(x => x.trim());
+    if (kind==='LEMBRETE' && parts.length>=2){ const at = new Date(parts[0]); if (!isNaN(at)) addRem(at, parts.slice(1).join(' | ')); }
+    else if (kind==='TAREFA') addTask(parts.join(' | '));
+    else if (kind==='FEITO'){ const ts = store.get('tasks',[]); const t = findBy(ts, parts[0]); if (t){ t.done = true; store.set('tasks', ts); renderTasks(); } }
+    else if (kind==='REMOVER_TAREFA'){ const ts = store.get('tasks',[]); const t = findBy(ts, parts[0]); if (t){ store.set('tasks', ts.filter(x => x!==t)); renderTasks(); } }
+    else if (kind==='CANCELAR_LEMBRETE'){ const rs = store.get('rems',[]); const r = findBy(rs, parts[0]); if (r){ store.set('rems', rs.filter(x => x!==r)); renderRems(); } }
+    else if (kind==='ABRIR') openLink(parts[0], out);
+  }
+}
+
+/* ---------- tasks ---------- */
+function addTask(text){ text = String(text||'').trim(); if (!text) return; const ts = store.get('tasks',[]); ts.push({text, done:false, id:Date.now()+Math.random()}); store.set('tasks', ts); renderTasks(); }
+function renderTasks(){
+  const ul = $('#tasks'); ul.innerHTML = ''; const ts = store.get('tasks',[]);
+  if (!ts.length){ const li = document.createElement('li'); li.innerHTML = '<span class="muted">Nada ainda. Diga "Atlas, adiciona gravar o vídeo 7".</span>'; ul.append(li); return; }
+  for (const t of ts){
+    const li = document.createElement('li'); if (t.done) li.className = 'done';
+    const cb = document.createElement('input'); cb.type='checkbox'; cb.checked=!!t.done; cb.setAttribute('aria-label','Concluir');
+    cb.onchange = () => { const a = store.get('tasks',[]); const x = a.find(y => y.id===t.id); if (x){ x.done = cb.checked; store.set('tasks', a); renderTasks(); } };
+    const sp = document.createElement('span'); sp.textContent = t.text;
+    const del = document.createElement('button'); del.type='button'; del.textContent='×'; del.setAttribute('aria-label','Apagar');
+    del.onclick = () => { store.set('tasks', store.get('tasks',[]).filter(y => y.id!==t.id)); renderTasks(); };
+    li.append(cb, sp, del); ul.append(li);
+  }
+}
+$('#taskForm').addEventListener('submit', e => { e.preventDefault(); addTask($('#taskIn').value); $('#taskIn').value=''; });
+$('#tasksClear').onclick = () => { store.set('tasks', store.get('tasks',[]).filter(t => !t.done)); renderTasks(); };
+// new day → keep only pending tasks
+(() => { const today = new Date().toDateString(); if (store.get('taskDay','') !== today){ store.set('tasks', store.get('tasks',[]).filter(t => !t.done)); store.set('taskDay', today); } })();
+renderTasks();
+
+/* ---------- reminders ---------- */
+function addRem(at, text){
+  const rs = store.get('rems',[]); rs.push({at: at.getTime(), text: String(text||'lembrete'), fired:false, id:Date.now()+Math.random()});
+  rs.sort((a,b) => a.at-b.at); store.set('rems', rs); renderRems();
+  try{ if ('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(e){}
+}
+function renderRems(){
+  const ul = $('#rems'); ul.innerHTML = ''; const rs = store.get('rems',[]).filter(r => !r.fired);
+  $('#remsEmpty').hidden = rs.length > 0;
+  for (const r of rs){
+    const li = document.createElement('li'); const tm = document.createElement('time');
+    const d = new Date(r.at); const sameDay = d.toDateString()===new Date().toDateString();
+    tm.textContent = sameDay ? d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const sp = document.createElement('span'); sp.textContent = r.text;
+    const del = document.createElement('button'); del.type='button'; del.textContent='×'; del.setAttribute('aria-label','Cancelar');
+    del.onclick = () => { store.set('rems', store.get('rems',[]).filter(y => y.id!==r.id)); renderRems(); };
+    li.append(tm, sp, del); ul.append(li);
+  }
+}
+function checkRems(){
+  const rs = store.get('rems',[]); let changed = false; const now = Date.now();
+  for (const r of rs){
+    if (!r.fired && r.at <= now){
+      r.fired = true; changed = true;
+      if (now - r.at < 6*3600e3){
+        chime();
+        const msg = `Chefe, lembrete: ${r.text}.`;
+        bubble('ai', '⏰ ' + msg); speak(msg);
+        try{ if ('Notification' in window && Notification.permission==='granted') new Notification('ATLAS — lembrete', {body: r.text}); }catch(e){}
+      }
+    }
+  }
+  if (changed){ store.set('rems', rs.filter(r => !r.fired || now - r.at < 86400e3)); renderRems(); }
+}
+renderRems(); setInterval(checkRems, 10000); setTimeout(checkRems, 2500);
+
+/* ---------- sounds ---------- */
+let actx = null;
+function ac(){ try{ actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state==='suspended') actx.resume(); }catch(e){} return actx; }
+function tone(f0, f1, dur, when=0, type='sine', vol=0.08){
+  const a = ac(); if (!a) return; const t = a.currentTime + when;
+  const o = a.createOscillator(), g = a.createGain(); o.type = type;
+  o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(f1, t+dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t+0.03); g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+  o.connect(g).connect(a.destination); o.start(t); o.stop(t+dur+0.05);
+}
+function bootSound(){ tone(80, 320, 1.4, 0, 'sawtooth', 0.04); tone(220, 880, 0.9, 0.5, 'sine', 0.05); tone(660, 660, 0.25, 1.35, 'sine', 0.06); tone(990, 990, 0.35, 1.55, 'sine', 0.06); }
+function chime(){ tone(880, 880, 0.25, 0, 'sine', 0.08); tone(1320, 1320, 0.4, 0.22, 'sine', 0.08); }
+
+/* ---------- shortcuts ---------- */
+const DEFAULT_LINKS = `YouTube Studio = https://studio.youtube.com
+Metricool = https://app.metricool.com
+NotebookLM = https://notebooklm.google.com
+Claude = https://claude.ai
+Gmail = https://mail.google.com
+Drive = https://drive.google.com
+TikTok = https://www.tiktok.com
+Instagram = https://www.instagram.com
+GitHub = https://github.com
+Google AI Studio = https://aistudio.google.com`;
+function parseLinks(){
+  const raw = store.get('links', DEFAULT_LINKS);
+  return raw.split('\n').map(l => { const i = l.indexOf('='); if (i<0) return null; const name = l.slice(0,i).trim(), url = l.slice(i+1).trim(); return name && /^https?:\/\//i.test(url) ? {name, url} : null; }).filter(Boolean);
+}
+function renderLinks(){
+  const box = $('#links'); box.innerHTML = '';
+  for (const l of parseLinks()){ const a = document.createElement('a'); a.href = l.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = l.name; box.append(a); }
+}
+const linksIn = $('#linksIn'); linksIn.value = store.get('links', DEFAULT_LINKS);
+linksIn.onchange = () => { store.set('links', linksIn.value); renderLinks(); };
+renderLinks();
+function findLink(name){ const n = norm(name); const ls = parseLinks(); return ls.find(l => norm(l.name)===n) || ls.find(l => norm(l.name).includes(n) || n.includes(norm(l.name))); }
+function openLink(name, where){
+  const l = findLink(name); if (!l){ bubble('err', `Não achei o atalho "${name}". Adicione em ⚙ Ajustes → Atalhos.`); return false; }
+  const w = window.open(l.url, '_blank', 'noopener');
+  const a = document.createElement('a'); a.className = 'openbtn'; a.href = l.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = `Abrir ${l.name} ↗`;
+  (where && where.parentNode ? where : log).after ? (where ? where.after(a) : log.append(a)) : log.append(a);
+  log.scrollTop = log.scrollHeight;
+  if (!w && !store.get('popupTip', false)){ bubble('err', 'Para eu abrir sites sozinho, permita pop-ups deste site (ícone na barra de endereço). Por enquanto, clique no botão acima.'); store.set('popupTip', true); }
+  return true;
+}
+function tryLocalOpen(text){
+  const m = norm(text).replace(/^atlas[,\s]*/,'').match(/^(abre|abrir|abra|abri)\s+(o |a |os |as )?(.+?)[.!?]*$/);
+  if (!m) return false; const l = findLink(m[3]); if (!l) return false;
+  bubble('me', text); q.value = ''; autosize();
+  const out = bubble('ai', `Abrindo ${l.name}, chefe.`); speak(`Abrindo ${l.name}, chefe.`); openLink(l.name, out);
+  return true;
+}
+
+/* ---------- pauta ---------- */
+function renderPauta(){
+  const p = store.get('pauta', null); const box = $('#pautaInfo');
+  if (!p){ return; }
+  const temas = (p.text.match(/^VIDEO\s*\d+\s*-\s*.+$/gmi) || []).slice(0,4);
+  box.textContent = `📄 ${p.name} · carregada ${new Date(p.at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}` + (temas.length ? '\n' + temas.map(t => '• ' + t.replace(/^VIDEO\s*\d+\s*-\s*/i,'')).join('\n') : '');
+  box.style.whiteSpace = 'pre-wrap';
+}
+async function loadPauta(file){
+  if (!file) return; const text = await file.text();
+  store.set('pauta', {name: file.name, text: text.slice(0, 40000), at: Date.now()}); renderPauta();
+  const msg = 'Pauta carregada, chefe. Pode perguntar sobre ela.'; bubble('ai', msg); speak(msg);
+}
+$('#pautaBtn').onclick = () => $('#pautaFile').click();
+$('#pautaFile').onchange = e => loadPauta(e.target.files[0]);
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => { e.preventDefault(); const f = e.dataTransfer?.files?.[0]; if (f && /\.(txt|md)$/i.test(f.name)) loadPauta(f); });
+renderPauta();
+
+/* ---------- weather ---------- */
+const WMO = {0:'céu limpo',1:'quase limpo',2:'parcialmente nublado',3:'nublado',45:'neblina',48:'neblina',51:'garoa fraca',53:'garoa',55:'garoa forte',61:'chuva fraca',63:'chuva',65:'chuva forte',66:'chuva congelante',67:'chuva congelante',71:'neve',73:'neve',75:'neve forte',80:'pancadas de chuva',81:'pancadas de chuva',82:'temporal',95:'trovoada',96:'trovoada com granizo',99:'trovoada com granizo'};
+async function loadWeather(){
+  const city = store.get('city',''); const box = $('#wx');
+  if (!city){ box.textContent = 'Defina sua cidade em ⚙ Ajustes.'; return; }
+  box.textContent = 'Carregando…';
+  try{
+    let geo = store.get('geo', null);
+    if (!geo || geo.city !== city){
+      const g = await (await fetch('https://geocoding-api.open-meteo.com/v1/search?count=1&language=pt&name=' + encodeURIComponent(city))).json();
+      const r = g.results?.[0]; if (!r) throw new Error('cidade não encontrada');
+      geo = {city, lat:r.latitude, lon:r.longitude, label:`${r.name}${r.admin1 ? ', ' + r.admin1 : ''}`}; store.set('geo', geo);
+    }
+    const w = await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${geo.lat}&longitude=${geo.lon}&current=temperature_2m,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=1&timezone=auto`)).json();
+    const c = w.current, d = w.daily; const desc = WMO[c.weather_code] || '—';
+    box.className = ''; box.innerHTML = '';
+    const top = document.createElement('div'); top.className = 'wx';
+    const b = document.createElement('b'); b.textContent = Math.round(c.temperature_2m) + '°'; const sp = document.createElement('span'); sp.textContent = desc; top.append(b, sp);
+    const sub = document.createElement('div'); sub.className = 'muted';
+    sub.textContent = `${geo.label} · mín ${Math.round(d.temperature_2m_min[0])}° máx ${Math.round(d.temperature_2m_max[0])}° · chuva ${d.precipitation_probability_max[0] ?? 0}%`;
+    box.append(top, sub);
+    store.set('wxText', `${geo.label}: ${Math.round(c.temperature_2m)}°C, ${desc}; mínima ${Math.round(d.temperature_2m_min[0])}°, máxima ${Math.round(d.temperature_2m_max[0])}°, chance de chuva ${d.precipitation_probability_max[0] ?? 0}%`);
+  }catch(e){ box.className = 'muted'; box.textContent = 'Não consegui carregar o clima (' + e.message + ').'; }
+}
+const cityIn = $('#cityIn'); cityIn.value = store.get('city','');
+cityIn.onchange = () => { store.set('city', cityIn.value.trim()); loadWeather(); };
+$('#wxRefresh').onclick = loadWeather;
+loadWeather(); setInterval(loadWeather, 30*60e3);
+
+/* ---------- mobile panel ---------- */
+$('#panelBtn').onclick = () => { document.body.classList.add('panels'); $('#panelClose').style.display = 'block'; };
+$('#panelClose').onclick = () => { document.body.classList.remove('panels'); $('#panelClose').style.display = 'none'; };
+
+/* ---------- boot ---------- */
+(() => {
+  const boot = $('#boot'); let started = false;
+  const start = () => {
+    if (started) return; started = true; $('#bootTap').hidden = true; bootSound();
+    const lines = ['> inicializando núcleo…', '> carregando memória do usuário… ok', '> conectando Gemini… ' + (apiKey ? 'ok' : 'aguardando chave'), '> sintetizador de voz pt-BR… ok', '> sensores: microfone, relógio, clima… ok', '> ATLAS ONLINE'];
+    let i = 0; const pre = $('#bootlog');
+    const step = () => { if (i < lines.length){ pre.textContent += lines[i++] + '\n'; setTimeout(step, reduce ? 0 : 230); } else { setTimeout(() => { boot.style.opacity = '0'; setTimeout(() => { boot.hidden = true; if (apiKey){ const n = store.get('nome',''); speak(`Sistemas online${n ? ', ' + n : ''}. Pronto para trabalhar, chefe.`); } }, 600); }, reduce ? 0 : 400); } };
+    step();
+  };
+  boot.addEventListener('click', start);
+  document.addEventListener('keydown', e => { if (!boot.hidden && !started){ e.preventDefault(); start(); } }, {capture:true});
+})();
+
 /* ---------- voice in ---------- */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const wakeOn = $('#wakeOn'); wakeOn.checked = store.get('wake', false);
@@ -334,8 +620,8 @@ function listen(){
 }
 $('#mic').onclick = listen;
 // push-to-talk: hold space when not typing
-document.addEventListener('keydown', e => { if (e.code==='Space' && document.activeElement!==q && !e.repeat && !listening){ e.preventDefault(); listen(); } });
-document.addEventListener('keyup', e => { if (e.code==='Space' && document.activeElement!==q && listening){ e.preventDefault(); rec?.stop(); } });
+document.addEventListener('keydown', e => { if (e.code==='Space' && !['TEXTAREA','INPUT','SELECT'].includes(document.activeElement?.tagName) && $('#boot').hidden && !e.repeat && !listening){ e.preventDefault(); listen(); } });
+document.addEventListener('keyup', e => { if (e.code==='Space' && !['TEXTAREA','INPUT','SELECT'].includes(document.activeElement?.tagName) && listening){ e.preventDefault(); rec?.stop(); } });
 
 // wake word "ATLAS"
 function startWake(){
